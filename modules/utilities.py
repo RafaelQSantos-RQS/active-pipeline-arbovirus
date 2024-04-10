@@ -2,6 +2,7 @@ import os
 from typing import NoReturn,List
 from logging import info, error
 import xml.dom.minidom as minidom
+from datetime import datetime
 
 
 def prepare_data_filesystem() -> NoReturn:
@@ -20,7 +21,7 @@ def prepare_data_filesystem() -> NoReturn:
     '''
 
     # Definindo a lista de diretórios a ser criado
-    list_of_paths = ['data/raw','data/analysis','data/processed']
+    list_of_paths = ['data/landing','data/bronze','data/silver','data/gold']
 
     # Iterando sobre cada um dos diretórios e tentando o criar
     for path in list_of_paths:
@@ -32,6 +33,25 @@ def prepare_data_filesystem() -> NoReturn:
             error(f"O diretório {path} já existe, nada será feito.")
         except Exception as ex:
             error(f"Erro inesperado ao tentar criar o diretório {path}: {ex}")
+
+def data_atual():
+    """
+    Descrição
+    ---------
+    Retorna a data atual formatada como DD-MM-AAAA.
+
+    Utiliza a função `datetime.today()` para obter a data atual e formata-a
+    como string no formato DD-MM-AAAA (ex: "09-04-2024").
+
+    Parametros
+    ---------
+    Não há parametros
+
+    Retorno
+    -------
+        str: Data atual formatada como string ("DD-MM-AAAA").
+    """
+    return datetime.today().strftime("%d-%m-%Y")
 
 def extract_uidlist_from_xml(xml_bytes: bytes) -> List[str]:
     '''
