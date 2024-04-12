@@ -2,6 +2,7 @@ import os
 import xmltodict
 import modules.api.entrez as entrez
 from logging import info, error, basicConfig, INFO
+from modules.utilities import data_atual
 basicConfig(level=INFO, format=f'%(asctime)s: %(message)s',datefmt='%d/%m/%Y %H:%M:%S')
 
 def bronze_step(database:str,**kwargs):
@@ -13,7 +14,7 @@ def bronze_step(database:str,**kwargs):
     xml_path = max(lista_de_arquivos_da_landing, key=os.path.getmtime)
 
     info(f"Lendo o xml {os.path.basename(xml_path)} da pasta landing.")
-    with open("data/landing/09-04-2024.xml",'r') as xml_file:
+    with open(os.path.join(landing_path,f"{data_atual()}.xml"),'r') as xml_file:
         xml_data = xml_file.read()
 
     info("Transformando o xml em um dicionário Python.")
