@@ -1,4 +1,4 @@
-import modules.api.entrez as entrez
+import modules.entrez as entrez
 from logging import info, error, basicConfig, INFO
 from modules.utilities import prepare_data_filesystem,extract_uidlist_from_xml
 
