@@ -84,3 +84,90 @@ def extract_uidlist_from_xml(xml_bytes: bytes) -> List[str]:
     except Exception as e:
         error(f"Ocorreu um erro ao extrair a lista de UIDs: {e}")
         raise
+
+def extract_pubmed_list(cell: list | dict) -> List[str]:
+    """
+    Extracts PubMed IDs from a cell containing INSDReference data and removes duplicates.
+
+    Args:
+        cell: The cell containing INSDReference data (list or single dictionary).
+
+    Returns:
+        list: A list of unique PubMed IDs.
+    """
+
+    pubmed_ids = set()
+    references = cell.get('INSDReference', [])
+
+    for reference in references if isinstance(references, list) else [references]:
+        pubmed_id = reference.get('INSDReference_pubmed')
+        if pubmed_id:
+            pubmed_ids.add(pubmed_id)
+
+    return list(pubmed_ids)
+
+
+def extract_country(cell) -> str | list | None:
+    """
+    Extracts unique country names from a cell's 'INSDFeature' information.
+
+    Args:
+        cell (dict): A dictionary representing a cell in a dataframe. It is expected
+                     to contain 'INSDFeature' information.
+
+    Returns:
+        list: A list containing unique country names extracted from the cell's
+              'INSDFeature' information.
+    """
+    unique_countries = set()
+    features = cell.get('INSDFeature', [])
+
+    for feature in features if isinstance(features, list) else [features]:
+        quals = feature.get('INSDFeature_quals', {}).get('INSDQualifier', [])
+
+        for qual in quals if isinstance(quals, list) else [quals]:
+            if qual.get('INSDQualifier_name') == 'country':
+                unique_countries.add(qual.get('INSDQualifier_value'))
+
+    if len(unique_countries) == 1:
+        return unique_countries.pop()  # Retorna o único elemento do conjunto
+    elif len(unique_countries) > 1:
+        return list(unique_countries)
+    else:
+        return None
+
+def extract_host(cell) -> str | list | None:
+    unique_hosts = set()
+    features = cell.get('INSDFeature', [])
+
+    for feature in features if isinstance(features, list) else [features]:
+        quals = feature.get('INSDFeature_quals', {}).get('INSDQualifier', [])
+
+        for qual in quals if isinstance(quals, list) else [quals]:
+            if qual.get('INSDQualifier_name') == 'host':
+                unique_hosts.add(qual.get('INSDQualifier_value'))
+
+    if len(unique_hosts) == 1:
+        return unique_hosts.pop()  # Retorna o único elemento do conjunto
+    elif len(unique_hosts) > 1:
+        return list(unique_hosts)
+    else:
+        return None
+    
+def extract_collection_date(cell):
+    collection_date = set()
+    features = cell.get('INSDFeature', [])
+
+    for feature in features if isinstance(features, list) else [features]:
+        quals = feature.get('INSDFeature_quals', {}).get('INSDQualifier', [])
+
+        for qual in quals if isinstance(quals, list) else [quals]:
+            if qual.get('INSDQualifier_name') == 'collection_date':
+                collection_date.add(qual.get('INSDQualifier_value'))
+
+    if len(collection_date) == 1:
+        return collection_date.pop()  # Retorna o único elemento do conjunto
+    elif len(collection_date) > 1:
+        return list(collection_date)
+    else:
+        return None
