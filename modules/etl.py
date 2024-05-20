@@ -35,10 +35,10 @@ class Landing:
             for tentativa in range(1,4):
                 try:
                     info(f"Efetuando a requisição (Tentativa {tentativa})")
-                    response_esearch = Landing._extract(database, term, kwargs)
+                    response_esearch = Landing.__extract(database, term, kwargs)
 
                     info("Sucesso! Salvando a resposta!")
-                    Landing._load(response_esearch)
+                    Landing.__load(response_esearch)
                     
                     return None
                     
@@ -49,12 +49,12 @@ class Landing:
             raise e
 
     @staticmethod
-    def _load(response_esearch):
+    def __load(response_esearch):
         with open(f"data/landing/{data_atual()}.xml",'wb') as xml_file:
             xml_file.write(response_esearch.content)
 
     @staticmethod
-    def _extract(database, term, kwargs):
+    def __extract(database, term, kwargs):
         response_esearch = esearch(database=database,term=term,**kwargs)
         return response_esearch
     
@@ -68,9 +68,9 @@ class Bronze:
         try:
         
             info("Iniciando a etapa bronze.")
-            xml_path, xml_dict = Bronze._extract()
-            listas_para_a_requisição = Bronze._transform(xml_dict)
-            Bronze._load(database, kwargs, xml_path, listas_para_a_requisição)
+            xml_path, xml_dict = Bronze.__extract()
+            listas_para_a_requisição = Bronze.__transform(xml_dict)
+            Bronze.__load(database, kwargs, xml_path, listas_para_a_requisição)
             info("Etapa bronze executada com sucesso!!")
         
         except Exception as e:
@@ -79,7 +79,7 @@ class Bronze:
 
 
     @staticmethod
-    def _extract():
+    def __extract():
         '''
         '''
         info("Selecionando o XML mais novo para efetuar a transformação")
@@ -97,7 +97,7 @@ class Bronze:
     
 
     @staticmethod
-    def _transform(xml_dict):
+    def __transform(xml_dict):
         '''
         '''
         info("Extraindo a lista de UID.")
@@ -110,7 +110,7 @@ class Bronze:
         return listas_para_a_requisição
     
     @staticmethod
-    def _load(database, kwargs, xml_path, listas_para_a_requisição):
+    def __load(database, kwargs, xml_path, listas_para_a_requisição):
         '''
         '''
         info("Efetuando as requisições.")
@@ -131,13 +131,13 @@ class Silver:
         '''
         '''
         try:
-            dataframe = Silver._extract()
-            transformed_datafreme = Silver._transform(dataframe=dataframe)
+            dataframe = Silver.__extract()
+            transformed_datafreme = Silver.__transform(dataframe=dataframe)
         except Exception as e:
             raise e
 
     @staticmethod
-    def _extract() -> pd.DataFrame:
+    def __extract() -> pd.DataFrame:
         bronze_path = 'data/bronze'
         lista_de_xmls = [os.path.join(bronze_path,file) for file in os.listdir(bronze_path)]
 
@@ -150,7 +150,7 @@ class Silver:
         return full_df
 
     @staticmethod
-    def _transform(dataframe:pd.DataFrame) -> pd.DataFrame:
+    def __transform(dataframe:pd.DataFrame) -> pd.DataFrame:
         full_df = dataframe[['INSDSeq_locus','INSDSeq_length','INSDSeq_update-date','INSDSeq_create-date','INSDSeq_references','INSDSeq_feature-table','INSDSeq_sequence']]
 
         # Renomeando colunas
