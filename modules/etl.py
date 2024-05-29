@@ -35,10 +35,10 @@ class Landing:
             for tentativa in range(1,4):
                 try:
                     info(f"Efetuando a requisição (Tentativa {tentativa})")
-                    response_esearch = Landing.__extract(database, term, kwargs)
+                    response_esearch = Landing.__extract__(database, term, kwargs)
 
                     info("Sucesso! Salvando a resposta!")
-                    Landing.__load(response_esearch)
+                    Landing.__load__(response_esearch)
                     
                     return None
                     
@@ -49,12 +49,12 @@ class Landing:
             raise e
 
     @staticmethod
-    def __load(response_esearch):
+    def __load__(response_esearch):
         with open(f"data/landing/{data_atual()}.xml",'wb') as xml_file:
             xml_file.write(response_esearch.content)
 
     @staticmethod
-    def __extract(database, term, kwargs):
+    def __extract__(database, term, kwargs):
         response_esearch = esearch(database=database,term=term,**kwargs)
         return response_esearch
     
@@ -68,9 +68,9 @@ class Bronze:
         try:
         
             info("Iniciando a etapa bronze.")
-            xml_path, xml_dict = Bronze.__extract()
-            listas_para_a_requisição = Bronze.__transform(xml_dict)
-            Bronze.__load(database, kwargs, xml_path, listas_para_a_requisição)
+            xml_path, xml_dict = Bronze.__extract__()
+            listas_para_a_requisição = Bronze.__transform__(xml_dict)
+            Bronze.__load__(database, kwargs, xml_path, listas_para_a_requisição)
             info("Etapa bronze executada com sucesso!!")
         
         except Exception as e:
@@ -79,7 +79,7 @@ class Bronze:
 
 
     @staticmethod
-    def __extract():
+    def __extract__():
         '''
         '''
         info("Selecionando o XML mais novo para efetuar a transformação")
@@ -97,7 +97,7 @@ class Bronze:
     
 
     @staticmethod
-    def __transform(xml_dict):
+    def __transform__(xml_dict):
         '''
         '''
         info("Extraindo a lista de UID.")
@@ -110,13 +110,14 @@ class Bronze:
         return listas_para_a_requisição
     
     @staticmethod
-    def __load(database, kwargs, xml_path, listas_para_a_requisição):
+    def __load__(database, kwargs, xml_path, listas_para_a_requisição):
         '''
         '''
         info("Efetuando as requisições.")
         for i in range(1,len(listas_para_a_requisição)+1):
             info(f"Efetuando a requisição {i}.")
             efetch_response = efetch(database=database,id=listas_para_a_requisição[i-1],**kwargs)
+            efetch_response.raise_for_status()
 
             info(f"Salvando a requisição {i}.")
             save_path = os.path.join(f'data/bronze/{os.path.basename(xml_path).replace(".",f" ({i}).")}')
@@ -131,15 +132,17 @@ class Silver:
         '''
         '''
         try:
-            dataframe = Silver.__extract()
-            transformed_datafreme = Silver.__transform(dataframe=dataframe)
+            raw_df = Silver.__extract__()
+            transformed_df = Silver.__transform__(dataframe=raw_df)
+
+            transformed_df.to_csv()
         except Exception as e:
             raise e
 
     @staticmethod
-    def __extract() -> pd.DataFrame:
+    def __extract__() -> pd.DataFrame:
         bronze_path = 'data/bronze'
-        lista_de_xmls = [os.path.join(bronze_path,file) for file in os.listdir(bronze_path)]
+        lista_de_xmls = [os.path.join(bronze_path,file) for file in os.listdir(bronze_path) if file.startswith(data_atual())]
 
         full_df = pd.DataFrame()
         for xml in lista_de_xmls:
@@ -150,7 +153,7 @@ class Silver:
         return full_df
 
     @staticmethod
-    def __transform(dataframe:pd.DataFrame) -> pd.DataFrame:
+    def __transform__(dataframe:pd.DataFrame) -> pd.DataFrame:
         full_df = dataframe[['INSDSeq_locus','INSDSeq_length','INSDSeq_update-date','INSDSeq_create-date','INSDSeq_references','INSDSeq_feature-table','INSDSeq_sequence']]
 
         # Renomeando colunas
@@ -187,7 +190,7 @@ class Silver:
 
         # Extrai os PMCID para todos os números Pubmed em paralelo
         list_of_pubmeds = full_df['pubmed'].drop_duplicates().dropna().tolist()
-        pmcid_results = extract_pmcid_from_list(list_of_pubmed=list_of_pubmeds, number_of_webscrappers=4)
+        pmcid_results = extract_pmcid_from_list(list_of_pubmed=list_of_pubmeds, number_of_webscrappers=2)
 
         # Cria um dicionário a partir dos resultados
         pmcid_dict = {temp_dict['pubmed_accession_number']: temp_dict['pmcid'] for temp_dict in pmcid_results}
